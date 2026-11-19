@@ -1,1 +1,76 @@
+#include <stdio.h>
+#include <string.h>
 
+#define MAX_NAMES 500
+#define MAX_LEN 30
+
+// Sort using index array (avoids copying 30-byte strings during swaps)
+void sort_indices(const char names[][MAX_LEN], int idx[], int n, long *comps, long *swaps) {
+    *comps = *swaps = 0;
+    for (int i = 0; i < n; i++) idx[i] = i;
+
+    for (int i = 0; i < n - 1; i++) {
+        for (int j = 0; j < n - 1 - i; j++) {
+            (*comps)++;
+            if (strcmp(names[idx[j]], names[idx[j + 1]]) > 0) {
+                int tmp = idx[j];
+                idx[j] = idx[j + 1];
+                idx[j + 1] = tmp;
+                (*swaps)++;
+            }
+        }
+    }
+}
+
+int binary_search_names(const char names[][MAX_LEN], const int idx[], int n, const char *target, int *comps) {
+    *comps = 0;
+    int low = 0, high = n - 1;
+    while (low <= high) {
+        int mid = low + (high - low) / 2;
+        (*comps)++;
+        int cmp = strcmp(names[idx[mid]], target);
+        if (cmp == 0) return mid;
+        else if (cmp < 0) low = mid + 1;
+        else high = mid - 1;
+    }
+    return -1;
+}
+
+void report_duplicates(const char names[][MAX_LEN], const int idx[], int n) {
+    printf("Duplicates found: ");
+    int found = 0;
+    for (int i = 0; i < n - 1; i++) {
+        if (strcmp(names[idx[i]], names[idx[i + 1]]) == 0) {
+            if (i == 0 || strcmp(names[idx[i]], names[idx[i - 1]]) != 0) {
+                printf("\"%s\" ", names[idx[i]]);
+                found = 1;
+            }
+        }
+    }
+    if (!found) printf("None");
+    printf("\n");
+}
+
+int main(void) {
+    char names[MAX_NAMES][MAX_LEN] = {
+        "Karthik", "Ananya", "Vikram", "Ananya", "Deepak", "Meera"
+    };
+    int n = 6, idx[MAX_NAMES], s_comps;
+    long comps, swaps;
+
+    sort_indices(names, idx, n, &comps, &swaps);
+
+    printf("Sorted Directory:\n");
+    for (int i = 0; i < n; i++) printf("  %s\n", names[idx[i]]);
+    printf("Sort Stats -> strcmp calls: %ld, index swaps: %ld\n", comps, swaps);
+
+    report_duplicates(names, idx, n);
+
+    int pos = binary_search_names(names, idx, n, "Meera", &s_comps);
+    printf("Search 'Meera' -> sorted pos %d, comparisons = %d\n", pos, s_comps);
+
+    pos = binary_search_names(names, idx, n, "Zoya", &s_comps);
+    printf("Search 'Zoya'  -> sorted pos %d, comparisons = %d\n", pos, s_comps);
+
+    return 0;
+}
